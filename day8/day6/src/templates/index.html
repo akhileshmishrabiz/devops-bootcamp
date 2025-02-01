@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Student Attendance</h1>
+    <form action="/add" method="POST">
+        <input type="text" name="name" placeholder="Student Name" required>
+        <button type="submit">Add Student</button>
+    </form>
+    <form action="/attendance" method="POST">
+        <select name="student_id" required>
+            {% for student in students %}
+                <option value="{{ student.id }}">{{ student.name }}</option>
+            {% endfor %}
+        </select>
+        <select name="status" required>
+            <option value="Present">Present</option>
+            <option value="Absent">Absent</option>
+        </select>
+        <button type="submit">Mark Attendance</button>
+    </form>
+    <table>
+        <thead>
+            <tr>
+                <th>Student Name</th>
+                <th>Date</th>
+                <th>Attendance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+                {% for attendance in student.attendance %}
+                    <tr>
+                        <td>{{ student.name }}</td>
+                        <td>{{ attendance.date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ attendance.status }}</td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

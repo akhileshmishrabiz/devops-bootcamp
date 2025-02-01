@@ -1,0 +1,66 @@
+name: day8 terraform prod
+# This sets the name of the workflow to "Terraform Deploy"
+
+on:
+  tags:
+    - v*
+    paths:
+    - 'day8'
+  
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    # Defining a job called 'terraform'
+    runs-on: ubuntu-latest
+    # The job will run on the latest Ubuntu runner in GitHub Actions
+
+    env:
+      # Setting environment variables for AWS credentials and region
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      # AWS Access Key ID is securely fetched from GitHub Secrets
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      # AWS Secret Access Key is also securely fetched from GitHub Secrets
+      AWS_REGION: ap-south-1
+      # Defining the AWS region for the deployment (set to 'ap-south-1', i.e., Asia Pacific - Mumbai region)
+      TERRAFORM_VER: 1.8.1
+      # Defining the Terraform version (1.5.1) to be used for this deployment
+      TERRAFORM_PATH:  day8/day6/infra
+      # Path to your Terraform files
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.8.1"
+
+      - name: Terraform Init
+        working-directory: ${{ env.TERRAFORM_PATH }}
+        run: terraform init -backend-config=vars/prod.tfbackend
+
+      - name: Terraform formatting check
+        working-directory: ${{ env.TERRAFORM_PATH }}
+        run: terraform fmt -check
+      # - name: Checkov
+      #   uses: bridgecrewio/checkov-action@v12
+      #   with:
+      #     directory: ${{ env.TERRAFORM_PATH }}
+      #     quiet: true
+      #     skip_check: CKV_AWS_338,CKV_AWS_51
+
+      # - name: Terraform Plan
+      #   working-directory: ${{ env.TERRAFORM_PATH }}
+      #   run: terraform plan
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TERRAFORM_PATH }}
+        run: terraform apply -var-file=vars/prod.tfvars  -auto-approve
+
+      ## Only when destroying 
+
+      # - name: terrafom destroy setup
+      #   working-directory: ${{ env.TERRAFORM_PATH }}
+      #   run: terraform destroy -var-file=vars/dev.tfvars -auto-approve

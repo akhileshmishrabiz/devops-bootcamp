@@ -1,0 +1,4 @@
+bucket  = "366140438193-devops-bootcamp-state"
+key     = "2-tier-flask/prod-tfstate"
+region  = "ap-south-1"
+encrypt = true

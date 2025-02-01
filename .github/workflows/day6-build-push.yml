@@ -3,10 +3,10 @@ name: day6 Build-Push docker
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'day6/src/**' 
+    # branches:
+    #   - main
+    # paths:
+    #   - 'day6/src/**' 
   workflow_dispatch:
 env:
   ECR_REPO: 366140438193.dkr.ecr.ap-south-1.amazonaws.com/bootcamp-dev-2-tier-flask
