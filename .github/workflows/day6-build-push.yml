@@ -2,7 +2,7 @@
 name: day6 Build-Push docker
 
 on:
-  push:
+  # push:
     # branches:
     #   - main
     # paths:

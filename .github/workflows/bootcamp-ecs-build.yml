@@ -2,12 +2,12 @@
 name: bootcamp Build-Push
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'day4/**' 
-      - '.github/workflows/bootcamp-ecs-build.yml'
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - 'day4/**' 
+  #     - '.github/workflows/bootcamp-ecs-build.yml'
   workflow_dispatch:
 
 jobs:
