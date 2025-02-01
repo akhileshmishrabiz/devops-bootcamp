@@ -1,4 +1,4 @@
-name: Terraform Deploy
+name: Terraform on PR
 # This sets the name of the workflow to "Terraform Deploy"
 
 on:
