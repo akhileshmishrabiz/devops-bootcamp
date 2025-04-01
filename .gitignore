@@ -174,3 +174,5 @@ cython_debug/
 .terraform.d/
 .terraform.lock.hcl
 .terraform
+
+*.zip
