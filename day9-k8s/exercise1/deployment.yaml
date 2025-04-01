@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment  # Name of the deployment
+spec:
+  replicas: 3  # Number of desired replicas/instances of the pod to be maintained by the deployment
+  selector:
+    matchLabels:
+      app: nginx  # Labels used to match the pods managed by this deployment
+  template:
+    metadata:
+      labels:
+        app: nginx  # Labels applied to the pods managed by this deployment
+    spec:
+      containers:
+      - name: my-container  # Name of the container
+        image: nginx:latest  # Docker image to be used for the container
+        ports:
+        - containerPort: 80  # Port that the container exposes
