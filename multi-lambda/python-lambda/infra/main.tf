@@ -37,6 +37,7 @@ resource "aws_lambda_function" "my_lambda_function" {
   runtime       = each.value.runtime
   timeout       = 60
   memory_size   = 256
+  layers        = each.value.layers # Add the layer ARN to the function
 
   # Use the Archive data source to zip the code
   filename         = data.archive_file.lambda_code[each.key].output_path

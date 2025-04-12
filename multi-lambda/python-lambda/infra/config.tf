@@ -102,7 +102,10 @@ locals {
       function_name = "get-cve-data"
       handler       = "main.lambda_handler"
       runtime       = "python3.12"
-      source_path   = "${path.module}/../functions/cve-detail-fetch"
+      layers = [
+        module.layers["requests"].lambda_layer_arn,
+      ]
+      source_path = "${path.module}/../functions/cve-detail-fetch"
       permissions = {
         "Version" : "2012-10-17",
         "Statement" : [
