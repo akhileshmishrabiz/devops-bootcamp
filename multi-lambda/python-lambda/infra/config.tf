@@ -121,8 +121,8 @@ locals {
               "*"
             ]
           },
-        
-        
+
+
         ]
       }
       role_name = "get-cve-data"
@@ -133,28 +133,28 @@ locals {
 
   lambda_def = { for i in local.lambda_defintion : i.function_name => i }
 
-   layer_definitions = [
-      {
-        "identifier" : "requests",
-        "description" : "Contains some python packages",
-        "path" : "layers/requests",
-        "compatible_runtimes" : ["python3.11", "python3.12"]
-      },
-      {
-        "identifier" : "pandas",
-        "description" : "Contains some python packages",
-        "path" : "layers/pandas",
-        "compatible_runtimes" : ["python3.11", "python3.12"]
-      },
-       {
-        "identifier" : "openpyxl",
-        "description" : "Contains some python packages",
-        "path" : "layers/openpyxl",
-        "runtime": "python3.12",
-        "compatible_runtimes" : ["python3.11", "python3.12"]
-      },
-    
-    ]
-layers_info = { for i in local.layer_definitions : i.identifier => i }
+  layer_definitions = [
+    {
+      "identifier" : "requests",
+      "description" : "Contains some python packages",
+      "path" : "layers/requests",
+      "compatible_runtimes" : ["python3.11", "python3.12"]
+    },
+    {
+      "identifier" : "pandas",
+      "description" : "Contains some python packages",
+      "path" : "layers/pandas",
+      "compatible_runtimes" : ["python3.11", "python3.12"]
+    },
+    {
+      "identifier" : "openpyxl",
+      "description" : "Contains some python packages",
+      "path" : "layers/openpyxl",
+      "runtime" : "python3.12",
+      "compatible_runtimes" : ["python3.11", "python3.12"]
+    },
+
+  ]
+  layers_info = { for i in local.layer_definitions : i.identifier => i }
 
 }

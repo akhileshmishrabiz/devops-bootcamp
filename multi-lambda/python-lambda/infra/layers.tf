@@ -18,7 +18,7 @@ module "layers" {
   runtime                  = lookup(each.value, "runtime", var.lambda_default_settings["runtime"])
   store_on_s3              = true
   s3_prefix                = "layers/${each.key}"
-  s3_bucket                = aws_s3_bucket.lambda_artifacts.id  
+  s3_bucket                = aws_s3_bucket.lambda_artifacts.id
   compatible_architectures = ["x86_64"]
 }
 

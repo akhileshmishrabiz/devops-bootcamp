@@ -47,7 +47,7 @@ resource "aws_lambda_function" "my_lambda_function" {
     variables = merge(
       {
         # Add any static environment variables here
-         "environment" = "var.environment"
+        "environment" = "var.environment"
       },
       lookup(each.value, "environment", {}), # Merge with dynamic environment variables
     )
@@ -56,17 +56,17 @@ resource "aws_lambda_function" "my_lambda_function" {
 
 
 resource "aws_iam_policy" "lambda_role_permissions" {
-    for_each    = local.lambda_def
-    name        = "${var.environment}-${each.value.function_name}-${var.prefix}"
-    description = "permissions for ${each.key} lambda function"
+  for_each    = local.lambda_def
+  name        = "${var.environment}-${each.value.function_name}-${var.prefix}"
+  description = "permissions for ${each.key} lambda function"
 
-    policy = jsonencode(  each.value.permissions )
+  policy = jsonencode(each.value.permissions)
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_role_policy_attachment" {
-    for_each   = local.lambda_def
-    role       = aws_iam_role.lambda_role[each.key].name
-    policy_arn = aws_iam_policy.lambda_role_permissions[each.key].arn
+  for_each   = local.lambda_def
+  role       = aws_iam_role.lambda_role[each.key].name
+  policy_arn = aws_iam_policy.lambda_role_permissions[each.key].arn
 }
 
 # # setuo a lambda trigger from cron job
