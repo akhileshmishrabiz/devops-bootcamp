@@ -1,1 +1,0 @@
-{"filename": "builds/b1639ce694b2f35cb668e8e6d31acc48d0c75848c5bde329d2e9e5b0537cfa22.zip", "runtime": "python3.12", "artifacts_dir": "builds", "build_plan": [["pip", "python3.12", "./layers/pandas/requirements.txt", "python", null], ["zip", "./layers/pandas", "python"]]}

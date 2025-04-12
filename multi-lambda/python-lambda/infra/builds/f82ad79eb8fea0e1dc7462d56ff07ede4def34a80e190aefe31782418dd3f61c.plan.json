@@ -1,1 +1,0 @@
-{"filename": "builds/f82ad79eb8fea0e1dc7462d56ff07ede4def34a80e190aefe31782418dd3f61c.zip", "runtime": "python3.12", "artifacts_dir": "builds", "build_plan": [["pip", "python3.12", "./layers/openpyxl/requirements.txt", "python", null], ["zip", "./layers/openpyxl", "python"]]}

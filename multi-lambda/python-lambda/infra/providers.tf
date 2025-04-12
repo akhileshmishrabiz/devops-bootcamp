@@ -22,3 +22,15 @@ provider "aws" {
 }
 
 # remote backend
+
+terraform {
+  backend "s3" {
+    bucket  = "366140438193-terraform-state"
+    key     = "devops-bootcamp/multi-lambda/terraform.tfstate"
+    region  = "ap-south-1"
+    encrypt = true
+  }
+}
+
+## google how to fix this
+## hint -> migrate state if the data is there on local or import the state
