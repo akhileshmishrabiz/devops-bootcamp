@@ -1,32 +1,20 @@
-name: day8 terraform dev
+name: lambda build
 # This sets the name of the workflow to "Terraform Deploy"
 
 on:
-  # push:
-  #   branches:
-  #     - main
-  #   paths:
-  #   - 'day8'
   
   workflow_dispatch:
 
 jobs:
   terraform:
-    # Defining a job called 'terraform'
     runs-on: ubuntu-latest
-    # The job will run on the latest Ubuntu runner in GitHub Actions
 
     env:
-      # Setting environment variables for AWS credentials and region
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      # AWS Access Key ID is securely fetched from GitHub Secrets
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      # AWS Secret Access Key is also securely fetched from GitHub Secrets
       AWS_REGION: ap-south-1
-      # Defining the AWS region for the deployment (set to 'ap-south-1', i.e., Asia Pacific - Mumbai region)
       TERRAFORM_VER: 1.8.1
-      # Defining the Terraform version (1.5.1) to be used for this deployment
-      TERRAFORM_PATH:  day8/day6/infra
+      TERRAFORM_PATH:  multi-lambda/python-lambda/infra
 
       # Path to your Terraform files
 
@@ -41,7 +29,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ env.TERRAFORM_PATH }}
-        run: terraform init -backend-config=vars/dev.tfbackend
+        run: terraform init
 
       - name: Terraform formatting check
         working-directory: ${{ env.TERRAFORM_PATH }}
@@ -59,10 +47,10 @@ jobs:
 
       - name: Terraform Apply
         working-directory: ${{ env.TERRAFORM_PATH }}
-        run: terraform apply -var-file=vars/dev.tfvars  -auto-approve
+        run: terraform apply   -auto-approve
 
       ## Only when destroying 
 
       # - name: terrafom destroy setup
       #   working-directory: ${{ env.TERRAFORM_PATH }}
-      #   run: terraform destroy -var-file=vars/dev.tfvars -auto-approve
+      #   run: terraform destroy  -auto-approve
