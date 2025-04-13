@@ -1,0 +1,141 @@
+# Stage 1: Basic, Bulky Dockerfile
+# Filename: Dockerfile.v1
+FROM python:3.9
+
+WORKDIR /app
+
+# Copy everything at once
+COPY . /app/
+
+# Install all requirements
+RUN pip install -r requirements.txt
+
+# Expose the port the app runs on
+EXPOSE 5000
+
+# Command to run the application
+CMD ["python", "app.py"]
+
+# ------------------------------------------------------
+
+# Stage 2: Using python-slim and separating dependency installation from code copying
+# Filename: Dockerfile.v2
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Copy requirements first to leverage Docker caching
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Then copy the rest of the application
+COPY . .
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
+
+# ------------------------------------------------------
+
+# Stage 3: Multi-stage build and adding a non-root user
+# Filename: Dockerfile.v3
+# Build stage
+FROM python:3.9-slim AS builder
+
+WORKDIR /app
+
+# Copy and install requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Runtime stage
+FROM python:3.9-slim
+
+# Create a non-root user
+RUN useradd -m appuser
+
+WORKDIR /app
+
+# Copy installed packages from builder stage
+COPY --from=builder /usr/local/lib/python3.9/site-packages/ /usr/local/lib/python3.9/site-packages/
+
+# Copy application code
+COPY . .
+
+# Set ownership
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+EXPOSE 5000
+
+CMD ["python", "app.py"]
+
+# ------------------------------------------------------
+
+# Stage 4: Adding .dockerignore and optimizing layers
+# Filename: Dockerfile.v4
+# Note: Create a .dockerignore file with the following contents:
+# .git
+# __pycache__/
+# *.pyc
+# *.pyo
+# *.pyd
+# .Python
+# env/
+# venv/
+# *.so
+# .coverage
+# htmlcov/
+# .tox/
+# .nox/
+# .pytest_cache/
+# .mypy_cache/
+# logs/
+# *.log
+
+FROM python:3.9-alpine AS builder
+
+WORKDIR /app
+
+# Copy requirements first
+COPY requirements.txt .
+
+# Install build dependencies, then dependencies, then remove build dependencies
+RUN apk add --no-cache --virtual .build-deps gcc musl-dev && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apk del .build-deps
+
+# Runtime stage
+FROM python:3.9-alpine
+
+# Create non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+WORKDIR /app
+
+# Copy installed packages from builder stage
+COPY --from=builder /usr/local/lib/python3.9/site-packages/ /usr/local/lib/python3.9/site-packages/
+
+# Copy only necessary files
+COPY app.py config.py ./
+
+# Set ownership
+RUN chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
+
+EXPOSE 5000
+
+# Use environment variables for configuration
+ENV APP_ENV=production
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:5000/health || exit 1
+
+CMD ["python", "app.py"]

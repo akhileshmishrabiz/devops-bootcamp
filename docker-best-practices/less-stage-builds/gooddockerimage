@@ -1,0 +1,30 @@
+# Stage 1: Frontend build
+FROM node:18-alpine AS frontend-builder
+
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ ./
+RUN npm run build
+
+# Stage 2: Backend build
+FROM golang:1.21 AS backend-builder
+
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+
+RUN go build -o server main.go
+
+# Stage 3: Final image
+FROM alpine:3.19
+
+WORKDIR /app
+COPY --from=backend-builder /app/server .
+COPY --from=backend-builder /app/frontend/dist ./frontend/dist
+
+EXPOSE 8080
+CMD ["./server"]
