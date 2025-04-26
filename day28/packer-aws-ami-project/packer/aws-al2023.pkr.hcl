@@ -66,7 +66,7 @@ build {
   
   # Upload the provisioning script
   provisioner "file" {
-    source      = "scripts/setup.sh"
+    source      = "${path.root}/scripts/setup.sh"
     destination = "/tmp/setup.sh"
   }
   
