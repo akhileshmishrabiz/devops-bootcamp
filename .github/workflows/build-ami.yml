@@ -42,7 +42,7 @@ jobs:
       - name: Validate Packer template
         run: |
           ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}
-          packer validate -var-file="day28/packer-aws-ami-project/variables/${ENVIRONMENT}.pkrvars.hcl" packer/aws-al2023.pkr.hcl
+          packer validate -var-file="day28/packer-aws-ami-project/variables/${ENVIRONMENT}.pkrvars.hcl" day28/packer-aws-ami-project/packer/aws-al2023.pkr.hcl
 
   build-ami:
     name: Build AMI
@@ -72,7 +72,7 @@ jobs:
       - name: Build AMI
         run: |
           ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}
-          packer build -var-file="day28/packer-aws-ami-project/variables/${ENVIRONMENT}.pkrvars.hcl" packer/aws-al2023.pkr.hcl
+          packer build -var-file="day28/packer-aws-ami-project/variables/${ENVIRONMENT}.pkrvars.hcl" day28/packer-aws-ami-project/packer/aws-al2023.pkr.hcl
       
       - name: Extract AMI ID
         id: extract-ami
