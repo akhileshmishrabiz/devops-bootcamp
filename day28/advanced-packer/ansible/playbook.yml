@@ -1,0 +1,81 @@
+---
+# Main playbook for configuring the AMI
+- name: Configure AMI
+  hosts: default
+  become: yes
+  gather_facts: yes
+  
+  roles:
+    - common
+  
+  pre_tasks:
+    - name: Update package cache
+      dnf:
+        update_cache: yes
+      changed_when: false
+  
+  tasks:
+    - name: Install additional packages
+      dnf:
+        name:
+          - nginx
+          - python3-pip
+          - logrotate
+          - fail2ban
+          - ntp
+        state: present
+    
+    - name: Start and enable services
+      systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+        - nginx
+        - fail2ban
+        - ntpd
+    
+    - name: Configure NTP
+      template:
+        src: ntp.conf.j2
+        dest: /etc/ntp.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart ntpd
+    
+    - name: Configure fail2ban
+      blockinfile:
+        path: /etc/fail2ban/jail.local
+        create: yes
+        block: |
+          [sshd]
+          enabled = true
+          bantime = 3600
+          findtime = 600
+          maxretry = 5
+      notify: restart fail2ban
+    
+    - name: Install Python packages
+      pip:
+        name:
+          - boto3
+          - awscli-local
+          - requests
+        state: present
+    
+    - name: Create a symbolic link for awslocal
+      file:
+        src: /usr/local/bin/awslocal
+        dest: /usr/bin/awslocal
+        state: link
+      ignore_errors: yes
+  
+  post_tasks:
+    - name: Ensure permissions on SSH directory
+      file:
+        path: /etc/ssh
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'

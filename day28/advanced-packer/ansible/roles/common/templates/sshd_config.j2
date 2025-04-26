@@ -1,0 +1,108 @@
+# This file is managed by Ansible
+# See the sshd_config(5) manpage for details
+
+# What ports, IPs and protocols we listen for
+Port {{ ssh_port }}
+
+# Use these options to restrict which interfaces/protocols sshd will bind to
+Protocol 2
+ListenAddress 0.0.0.0
+ListenAddress ::
+
+# HostKeys for protocol version 2
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+# Ciphers and keying
+RekeyLimit default none
+
+# Logging
+SyslogFacility AUTH
+LogLevel INFO
+
+# Authentication:
+LoginGraceTime 60
+PermitRootLogin {{ ssh_permit_root_login }}
+StrictModes {{ 'yes' if ssh_strict_modes else 'no' }}
+MaxAuthTries {{ ssh_max_auth_tries }}
+MaxSessions {{ ssh_max_sessions }}
+
+PubkeyAuthentication yes
+
+# The default is to check both .ssh/authorized_keys and .ssh/authorized_keys2
+AuthorizedKeysFile      .ssh/authorized_keys
+
+# For this to work you will also need host keys in /etc/ssh/ssh_known_hosts
+HostbasedAuthentication no
+
+# Don't read the user's ~/.rhosts and ~/.shosts files
+IgnoreRhosts yes
+
+# To disable tunneled clear text passwords, change to no here!
+PasswordAuthentication {{ ssh_password_authentication }}
+PermitEmptyPasswords no
+
+# Change to no to disable s/key passwords
+ChallengeResponseAuthentication no
+
+# Kerberos options
+KerberosAuthentication no
+
+# GSSAPI options
+GSSAPIAuthentication no
+
+# Set this to 'yes' to enable PAM authentication, account processing,
+# and session processing. If this is enabled, PAM authentication will
+# be allowed through the ChallengeResponseAuthentication and
+# PasswordAuthentication.  Depending on your PAM configuration,
+# PAM authentication via ChallengeResponseAuthentication may bypass
+# the setting of "PermitRootLogin without-password".
+# If you just want the PAM account and session checks to run without
+# PAM authentication, then enable this but set PasswordAuthentication
+# and ChallengeResponseAuthentication to 'no'.
+UsePAM {{ 'yes' if ssh_use_pam else 'no' }}
+
+# Allow client to pass locale environment variables
+AcceptEnv LANG LC_*
+
+# Forwarding
+AllowAgentForwarding {{ 'yes' if ssh_allow_agent_forwarding else 'no' }}
+AllowTcpForwarding {{ 'yes' if ssh_allow_tcp_forwarding else 'no' }}
+GatewayPorts no
+X11Forwarding {{ 'yes' if ssh_x11_forwarding else 'no' }}
+X11DisplayOffset 10
+X11UseLocalhost yes
+
+# Alive interval
+ClientAliveInterval {{ ssh_client_alive_interval }}
+ClientAliveCountMax {{ ssh_client_alive_count_max }}
+
+# Show banner and last login
+PrintMotd {{ 'yes' if ssh_print_motd else 'no' }}
+PrintLastLog {{ 'yes' if ssh_print_last_log else 'no' }}
+
+# Allow only specific groups/users if defined
+{% if ssh_allowed_users | length > 0 %}
+AllowUsers {{ ssh_allowed_users | join(' ') }}
+{% endif %}
+{% if ssh_allowed_groups | length > 0 %}
+AllowGroups {{ ssh_allowed_groups | join(' ') }}
+{% endif %}
+
+# Other settings
+TCPKeepAlive yes
+Compression delayed
+UsePrivilegeSeparation {{ ssh_use_privilege_separation }}
+UseLogin no
+UseDNS {{ 'yes' if ssh_use_dns else 'no' }}
+PermitUserEnvironment no
+PermitTunnel no
+
+# Change to yes to enable sftp
+Subsystem sftp /usr/libexec/openssh/sftp-server
+
+# Set Ciphers, MACs, and KexAlgorithms
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256
+KexAlgorithms curve25519-sha256@libssh.org,diffie-hellman-group-exchange-sha256

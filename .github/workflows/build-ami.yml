@@ -1,17 +1,12 @@
 name: Build AMI with Packer
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'day28/packer-aws-ami-project/packer/**'
-      - 'day28/packer-aws-ami-project/variables/**'
-      - '.github/workflows/build-ami.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'day28/packer-aws-ami-project/packer/**'
-      - 'day28/packer-aws-ami-project/variables/**'
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'day28/packer-aws-ami-project/packer/**'
+  #     - 'day28/packer-aws-ami-project/variables/**'
+  #     - '.github/workflows/build-ami.yml'
   workflow_dispatch:
     inputs:
       environment:

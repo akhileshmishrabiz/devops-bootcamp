@@ -1,0 +1,154 @@
+name: Build Advanced AMI with Packer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'day28/advanced-packer/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to build for (dev or prod)'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+env:
+  PACKER_VERSION: v1.12.0
+  WORKING_DIR: day28/advanced-packer
+
+jobs:
+  validate:
+    name: Validate Packer Template
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: ${{ env.PACKER_VERSION }}
+      
+      - name: Install Ansible
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+          
+      - name: Initialize Packer
+        working-directory: ${{ env.WORKING_DIR }}
+        run: packer init packer/advanced-al2023.pkr.hcl
+      
+      - name: Validate Ansible playbook
+        working-directory: ${{ env.WORKING_DIR }}
+        run: ansible-playbook --syntax-check ansible/playbook.yml
+      
+      - name: Validate Packer template
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}
+          packer validate -var-file="variables/${ENVIRONMENT}.pkrvars.hcl" packer/advanced-al2023.pkr.hcl
+
+  build-ami:
+    name: Build AMI
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: ${{ env.PACKER_VERSION }}
+      
+      - name: Install Ansible
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+      
+      - name: Initialize Packer
+        working-directory: ${{ env.WORKING_DIR }}
+        run: packer init packer/advanced-al2023.pkr.hcl
+      
+      - name: Create KMS key if not exists
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}
+          
+          # Check if the KMS key exists
+          if [[ "$ENVIRONMENT" == "dev" ]]; then
+            KMS_ALIAS="alias/dev-ami-encryption-key"
+          else
+            KMS_ALIAS="alias/prod-ami-encryption-key"
+          fi
+          
+          # Get the KMS key ARN
+          KMS_ARN=$(aws kms describe-key --key-id $KMS_ALIAS --query 'KeyMetadata.Arn' --output text 2>/dev/null || echo "")
+          
+          # Create KMS key if it doesn't exist
+          if [[ -z "$KMS_ARN" || "$KMS_ARN" == "None" ]]; then
+            echo "Creating new KMS key with alias $KMS_ALIAS"
+            
+            # Create new KMS key
+            KMS_OUTPUT=$(aws kms create-key --description "${ENVIRONMENT} AMI encryption key" --output json)
+            KMS_ID=$(echo $KMS_OUTPUT | jq -r '.KeyMetadata.KeyId')
+            
+            # Create alias for the key
+            aws kms create-alias --alias-name $KMS_ALIAS --target-key-id $KMS_ID
+            
+            echo "Created new KMS key with ID: $KMS_ID and alias: $KMS_ALIAS"
+          else
+            echo "KMS key with alias $KMS_ALIAS already exists"
+          fi
+      
+      - name: Build AMI
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}
+          packer build -var-file="variables/${ENVIRONMENT}.pkrvars.hcl" packer/advanced-al2023.pkr.hcl
+      
+      - name: Extract AMI ID
+        working-directory: ${{ env.WORKING_DIR }}
+        id: extract-ami
+        run: |
+          AMI_ID=$(grep -o 'ami-[a-z0-9]*' manifest.json | head -1)
+          echo "ami_id=${AMI_ID}" >> $GITHUB_OUTPUT
+          echo "AMI ID: ${AMI_ID}" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Verify encryption and sharing
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}
+          AMI_ID="${{ steps.extract-ami.outputs.ami_id }}"
+          
+          # Verify AMI encryption
+          ENCRYPTED=$(aws ec2 describe-images --image-ids "$AMI_ID" --query 'Images[0].Encrypted' --output text)
+          echo "AMI Encryption Status: $ENCRYPTED" >> $GITHUB_STEP_SUMMARY
+          
+          # Verify AMI sharing
+          LAUNCH_PERMISSIONS=$(aws ec2 describe-image-attribute --image-id "$AMI_ID" --attribute launchPermission --output json)
+          echo "AMI Share Status: $LAUNCH_PERMISSIONS" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Output AMI details
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}
+          echo "### AMI Build Complete! :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${ENVIRONMENT}" >> $GITHUB_STEP_SUMMARY
+          echo "- **AMI ID:** ${{ steps.extract-ami.outputs.ami_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region:** ${{ secrets.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Date:** $(date)" >> $GITHUB_STEP_SUMMARY

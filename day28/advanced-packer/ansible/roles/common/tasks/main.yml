@@ -1,0 +1,139 @@
+---
+# Common role tasks
+
+- name: Configure SSH
+  block:
+    - name: Update SSH configuration
+      template:
+        src: sshd_config.j2
+        dest: /etc/ssh/sshd_config
+        owner: root
+        group: root
+        mode: '0600'
+        validate: '/usr/sbin/sshd -t -f %s'
+      notify: restart sshd
+    
+    - name: Ensure SSH directory for authorized keys exists
+      file:
+        path: /etc/ssh/authorized_keys
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+    
+    - name: Create SSH hardening script
+      copy:
+        content: |
+          #!/bin/bash
+          # Script to harden SSH configuration
+          
+          # Backup original config
+          cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+          
+          # Apply additional hardening settings
+          sed -i 's/#MaxAuthTries 6/MaxAuthTries 3/' /etc/ssh/sshd_config
+          sed -i 's/#MaxSessions 10/MaxSessions 5/' /etc/ssh/sshd_config
+          
+          # Restart SSH service
+          systemctl restart sshd
+        dest: /opt/scripts/harden_ssh.sh
+        owner: root
+        group: root
+        mode: '0700'
+
+- name: Configure system security
+  block:
+    - name: Set password policies
+      copy:
+        content: |
+          # Password policies
+          auth    required       pam_faildelay.so delay=2000000
+          password requisite     pam_pwquality.so retry=3 minlen=12 lcredit=-1 ucredit=-1 dcredit=-1 ocredit=-1
+          password required      pam_pwhistory.so use_authtok remember=5
+        dest: /etc/pam.d/passwd-policy
+        owner: root
+        group: root
+        mode: '0644'
+    
+    - name: Configure auditd rules
+      template:
+        src: audit.rules.j2
+        dest: /etc/audit/rules.d/audit.rules
+        owner: root
+        group: root
+        mode: '0600'
+      notify: restart auditd
+      ignore_errors: yes
+
+- name: Configure system performance
+  block:
+    - name: Create performance tuning profile
+      copy:
+        content: |
+          # Performance tuning profile
+          vm.swappiness = 10
+          vm.dirty_ratio = 80
+          vm.dirty_background_ratio = 5
+          fs.file-max = 2097152
+          fs.nr_open = 2097152
+        dest: /etc/sysctl.d/98-performance.conf
+        owner: root
+        group: root
+        mode: '0644'
+    
+    - name: Apply sysctl settings
+      command: sysctl -p /etc/sysctl.d/98-performance.conf
+      changed_when: false
+
+- name: Configure environment variables
+  block:
+    - name: Set default environment variables
+      blockinfile:
+        path: /etc/environment
+        create: yes
+        block: |
+          # Custom environment settings
+          ENVIRONMENT={{ environment | default('production') }}
+          TZ=UTC
+          LANG=en_US.UTF-8
+          LC_ALL=en_US.UTF-8
+    
+    - name: Create profile script for all users
+      copy:
+        content: |
+          # Custom configuration
+          export PATH=$PATH:/opt/scripts
+          alias ll='ls -la'
+          alias df='df -h'
+          alias du='du -h'
+        dest: /etc/profile.d/custom.sh
+        owner: root
+        group: root
+        mode: '0644'
+
+- name: Configure log rotation
+  block:
+    - name: Set up custom log rotation
+      copy:
+        content: |
+          /var/log/custom/*.log {
+            daily
+            rotate 7
+            compress
+            delaycompress
+            missingok
+            notifempty
+            create 0640 root adm
+          }
+        dest: /etc/logrotate.d/custom
+        owner: root
+        group: root
+        mode: '0644'
+    
+    - name: Create custom log directory
+      file:
+        path: /var/log/custom
+        state: directory
+        owner: root
+        group: adm
+        mode: '0750'

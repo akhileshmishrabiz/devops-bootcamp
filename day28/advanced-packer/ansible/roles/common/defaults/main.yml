@@ -1,0 +1,46 @@
+---
+# Default variables for the common role
+
+# SSH configuration
+ssh_port: 22
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+ssh_allow_agent_forwarding: "yes"
+ssh_allow_tcp_forwarding: "yes"
+ssh_x11_forwarding: "no"
+ssh_max_auth_tries: 3
+ssh_max_sessions: 5
+ssh_client_alive_interval: 300
+ssh_client_alive_count_max: 3
+ssh_use_dns: "no"
+ssh_use_pam: "yes"
+ssh_print_motd: "yes"
+ssh_print_last_log: "yes"
+ssh_use_privilege_separation: "sandbox"
+ssh_strict_modes: "yes"
+ssh_allowed_users: []
+ssh_allowed_groups: []
+
+# Security configuration
+security_password_min_length: 12
+security_password_max_age: 90
+security_password_min_age: 1
+security_password_warn_age: 7
+security_password_remember: 5
+security_failed_login_attempts: 5
+security_lockout_time: 1800
+
+# System performance
+system_swappiness: 10
+system_dirty_ratio: 80
+system_dirty_background_ratio: 5
+system_file_max: 2097152
+
+# Environment configuration
+environment: "production"
+timezone: "UTC"
+locale: "en_US.UTF-8"
+
+# Log rotation
+log_rotate_days: 7
+log_rotate_size: "100M"
