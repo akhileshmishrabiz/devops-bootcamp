@@ -1,11 +1,12 @@
 name: Build Advanced AMI with Packer
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'day28/advanced-packer/**'
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'day28/advanced-packer/**'
   workflow_dispatch:
+  # schedule:
     inputs:
       environment:
         description: 'Environment to build for (dev or prod)'
@@ -68,7 +69,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: "ap-south-1"
       
       - name: Setup Packer
         uses: hashicorp/setup-packer@main

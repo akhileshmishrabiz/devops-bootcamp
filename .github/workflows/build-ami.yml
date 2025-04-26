@@ -8,6 +8,8 @@ on:
   #     - 'day28/packer-aws-ami-project/variables/**'
   #     - '.github/workflows/build-ami.yml'
   workflow_dispatch:
+  # schedule:
+  #   - cron: "15 4,5 * * *"
     inputs:
       environment:
         description: 'Environment to build for (dev or prod)'
