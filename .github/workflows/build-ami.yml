@@ -7,7 +7,11 @@ on:
       - 'day28/packer-aws-ami-project/packer/**'
       - 'day28/packer-aws-ami-project/variables/**'
       - '.github/workflows/build-ami.yml'
-
+  pull_request:
+    branches: [main]
+    paths:
+      - 'day28/packer-aws-ami-project/packer/**'
+      - 'day28/packer-aws-ami-project/variables/**'
   workflow_dispatch:
     inputs:
       environment:
@@ -20,7 +24,8 @@ on:
           - prod
 
 env:
-  PACKER_VERSION: 1.12.0
+  PACKER_VERSION: 1.9.4
+  WORKING_DIR: day28/packer-aws-ami-project
 
 jobs:
   validate:
@@ -37,12 +42,14 @@ jobs:
           version: ${{ env.PACKER_VERSION }}
       
       - name: Initialize Packer
-        run: packer init day28/packer-aws-ami-project/packer/aws-al2023.pkr.hcl
+        working-directory: ${{ env.WORKING_DIR }}
+        run: packer init packer/aws-al2023.pkr.hcl
       
       - name: Validate Packer template
+        working-directory: ${{ env.WORKING_DIR }}
         run: |
           ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}
-          packer validate -var-file="day28/packer-aws-ami-project/variables/${ENVIRONMENT}.pkrvars.hcl" day28/packer-aws-ami-project/packer/aws-al2023.pkr.hcl
+          packer validate -var-file="variables/${ENVIRONMENT}.pkrvars.hcl" packer/aws-al2023.pkr.hcl
 
   build-ami:
     name: Build AMI
@@ -67,14 +74,17 @@ jobs:
           version: ${{ env.PACKER_VERSION }}
       
       - name: Initialize Packer
-        run: packer init day28/packer-aws-ami-project/packer/aws-al2023.pkr.hcl
+        working-directory: ${{ env.WORKING_DIR }}
+        run: packer init packer/aws-al2023.pkr.hcl
       
       - name: Build AMI
+        working-directory: ${{ env.WORKING_DIR }}
         run: |
           ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}
-          packer build -var-file="day28/packer-aws-ami-project/variables/${ENVIRONMENT}.pkrvars.hcl" day28/packer-aws-ami-project/packer/aws-al2023.pkr.hcl
+          packer build -var-file="variables/${ENVIRONMENT}.pkrvars.hcl" packer/aws-al2023.pkr.hcl
       
       - name: Extract AMI ID
+        working-directory: ${{ env.WORKING_DIR }}
         id: extract-ami
         run: |
           AMI_ID=$(grep -o 'ami-[a-z0-9]*' packer-manifest.json | head -1)
@@ -82,6 +92,7 @@ jobs:
           echo "AMI ID: ${AMI_ID}" >> $GITHUB_STEP_SUMMARY
       
       - name: Output AMI details
+        working-directory: ${{ env.WORKING_DIR }}
         run: |
           ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}
           echo "### AMI Build Complete! :rocket:" >> $GITHUB_STEP_SUMMARY
