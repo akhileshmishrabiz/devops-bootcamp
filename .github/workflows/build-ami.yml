@@ -1,0 +1,91 @@
+name: Build AMI with Packer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'day28/packer-aws-ami-project/packer/**'
+      - 'day28/packer-aws-ami-project/variables/**'
+      - '.github/workflows/build-ami.yml'
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to build for (dev or prod)'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+env:
+  PACKER_VERSION: 1.12.0
+
+jobs:
+  validate:
+    name: Validate Packer Template
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: ${{ env.PACKER_VERSION }}
+      
+      - name: Initialize Packer
+        run: packer init packer/aws-al2023.pkr.hcl
+      
+      - name: Validate Packer template
+        run: |
+          ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}
+          packer validate -var-file="variables/${ENVIRONMENT}.pkrvars.hcl" packer/aws-al2023.pkr.hcl
+
+  build-ami:
+    name: Build AMI
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: ${{ env.PACKER_VERSION }}
+      
+      - name: Initialize Packer
+        run: packer init packer/aws-al2023.pkr.hcl
+      
+      - name: Build AMI
+        run: |
+          ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}
+          packer build -var-file="variables/${ENVIRONMENT}.pkrvars.hcl" packer/aws-al2023.pkr.hcl
+      
+      - name: Extract AMI ID
+        id: extract-ami
+        run: |
+          AMI_ID=$(grep -o 'ami-[a-z0-9]*' packer-manifest.json | head -1)
+          echo "ami_id=${AMI_ID}" >> $GITHUB_OUTPUT
+          echo "AMI ID: ${AMI_ID}" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Output AMI details
+        run: |
+          ENVIRONMENT=${{ github.event.inputs.environment || 'dev' }}
+          echo "### AMI Build Complete! :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** ${ENVIRONMENT}" >> $GITHUB_STEP_SUMMARY
+          echo "- **AMI ID:** ${{ steps.extract-ami.outputs.ami_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Region:** ${{ secrets.AWS_REGION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Date:** $(date)" >> $GITHUB_STEP_SUMMARY
