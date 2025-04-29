@@ -1,0 +1,41 @@
+# day30/src
+
+name: Docker Image Scan with Trivy
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  scan:
+    name: Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Build the Docker image
+      - name: Build Docker image
+        run: |
+          cd day30/src
+          docker build -t app:${{ github.sha }} .
+
+      # Scan the Docker image with Trivy
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action
+        with:
+          image-ref: 'app:${{ github.sha }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      # Optional: Upload Trivy scan results as an artifact
+      # - name: Upload Trivy scan results
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: trivy-results
+      #     path: trivy-results.sarif
+          # Note: You would need to modify the Trivy command to generate SARIF output

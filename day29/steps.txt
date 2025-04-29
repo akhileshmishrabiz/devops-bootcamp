@@ -1,0 +1,5 @@
+
+1.  aws ec2 create-vpc-endpoint --vpc-id vpc-0abdc397fa9bfc78a --service-name com.amazonaws.ap-south-1.ssm --vpc-endpoint-type Interface
+
+aws ec2 create-vpc-endpoint --vpc-id vpc-0abdc397fa9bfc78a  --service-name com.amazonaws.ap-south-1.ec2messages --vpc-endpoint-type Interface
+aws ec2 create-vpc-endpoint --vpc-id vpc-0abdc397fa9bfc78a  --service-name com.amazonaws.ap-south-1.ssmmessages --vpc-endpoint-type Interface
