@@ -1,0 +1,32 @@
+DevOps/AI Project on AWS: Deploy ML Model with SageMaker
+
+Want to combine DevOps & AI in a real-world AWS project? Try this hands-on SageMaker workflow:
+
+1. Define the Use Case
+Predict customer churn, detect anomalies, or classify support tickets using historical data.
+
+2. Prepare the Dataset
+Clean and upload your dataset to an S3 bucket (CSV/JSON formats work great).
+
+3. Build & Train ML Model
+Use Amazon SageMaker Studio to select a built-in algorithm or bring your own (like XGBoost or sklearn).
+
+4. Track Experiments
+Use SageMaker Experiments to track training jobs, metrics, and parameters.
+
+5. Deploy the Model
+Host your model using SageMaker Endpoints for real-time inference.
+
+6. Automate with GitHub Actions
+Set up a CI/CD pipeline to retrain and redeploy the model automatically when new data lands in S3.
+
+7. Integrate with AWS Lambda
+Trigger inference via Lambda to automate decisions from external services (e.g., forms, apps).
+
+8. Monitor the Model
+Use SageMaker Model Monitor to detect data drift or performance degradation.
+
+9. Secure It All
+Use IAM roles for fine-grained access, encrypt S3 data, and apply VPC configurations.
+
+This hands-on project simulates real world scenario where you would deploy ML model to AWS SageMaker.
