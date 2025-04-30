@@ -1,0 +1,45 @@
+DevOps Project: Event-Driven Architecture on AWS with SQS & Lambda
+
+Automate everything with Terraform & GitHub Actions. Here’s your challenge:
+
+Goal:
+Process system events/messages asynchronously using SQS and trigger Lambda to handle them, fully deployed via CI/CD.
+
+Steps:
+1. Create SQS Queue with Terraform
+Use Terraform to define a standard queue that will hold event messages (e.g., ci-events-queue).
+
+2. Create IAM Roles and Policies
+Define least-privilege roles for Lambda with permissions to read from SQS and write to CloudWatch.
+
+3. Deploy Lambda Function via Terraform
+Use Terraform to deploy a Lambda that polls messages from SQS and processes them (e.g., logs details or posts to a Slack webhook).
+
+4. Integrate SQS with Lambda (Terraform)
+Create an event source mapping in Terraform to connect the SQS queue with your Lambda function.
+
+5. Terraform Backend and State Management
+Use S3 and DynamoDB to store Terraform state securely.
+
+6. Write GitHub Actions Workflow
+Create a CI pipeline that:
+- Lints and validates Terraform code
+- Plans and applies Terraform automatically on main branch push
+
+7. Authenticate GitHub to AWS
+Use OIDC-based authentication from GitHub to AWS. Attach IAM role with trust policy for GitHub Actions.
+
+8. Test Your Event Flow
+Send sample messages to SQS (manually or with a CLI/API) and verify that Lambda handles them correctly.
+
+9. Monitor with CloudWatch
+Use CloudWatch logs to debug and monitor the event-processing pipeline.
+
+11.(Optional) Extend the Flow
+Add another Lambda to act on certain messages (e.g., trigger a rollback on “deployment_failed” message).
+
+This project will teach you:
+- Building event-driven systems on AWS
+- Automating infra with Terraform + GitHub Actions
+- Using SQS + Lambda for decoupled processing
+- Securing and managing CI/CD pipelines and IAM roles
