@@ -1,0 +1,55 @@
+DevSecOps Project: AWS, GitHub Actions, Docker
+
+Securely build & push Docker images with GitHub Actions and scan them with Snyk.
+
+Here is a step-by-step guide:
+
+1. Create an ECR Repository in AWS
+Set up a private Amazon ECR repository to store your Docker images.
+
+2. Define IAM Policy (Least Privilege)
+Create a custom IAM policy with only the permissions required to authenticate and push to ECR:
+- ecr:BatchCheckLayerAvailability
+- ecr:PutImage
+- ecr:InitiateLayerUpload
+- ecr:UploadLayerPart
+- ecr:CompleteLayerUpload
+- ecr:GetAuthorizationToken
+
+3. Create an IAM Role for GitHub Actions
+Use IAM OIDC with GitHub Actions for short-lived, secure access.
+Grant the IAM role the custom policy created above.
+Add Trust Relationships to allow GitHub OIDC to assume the role.
+
+4. Configure GitHub Workflow for OIDC
+In your GitHub Actions workflow:
+- Use permissions: id-token: write and aws-actions/configure-aws-credentials@v2
+- Authenticate via OIDC using role ARN (no need to store access keys)
+
+5. Write a GitHub Actions Workflow
+Build the Docker image with metadata (tag with commit SHA or GitHub run number)
+Push the image to ECR
+
+6. Integrate Snyk for Image Scanning
+- Add Snyk CLI to your workflow
+- Authenticate with a SNYK_TOKEN secret
+- Scan the Docker image before pushing to ECR
+- Optionally fail the build if high-severity issues are found
+
+7. Enable Branch Protection Rules
+Require status checks (like Snyk scan) to pass before merging to main.
+
+8. Set Up GitHub Code Scanning Alerts (Optional)
+Enhance your pipeline with GitHub’s native security analysis tools.
+
+9. Monitor ECR with AWS Inspector
+Enable Amazon Inspector to continuously scan your ECR images post-deployment.
+
+10. Document Your Pipeline & IAM Strategy
+Keep internal documentation of your IAM policies, GitHub Actions workflow, and scanning practices for future audits.
+
+This project demonstrates practical DevSecOps principles, including:
+- IAM least privilege
+- Secure CI/CD authentication
+- Vulnerability scanning in CI
+- Secure Docker practices
